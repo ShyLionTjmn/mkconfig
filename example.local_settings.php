@@ -4,4 +4,5 @@
   $redis_timeout = 2;
   $redis_db = 0;
   $redis_hash = "mkconfig";
+  $autobackup_period = 3600;
 ?>

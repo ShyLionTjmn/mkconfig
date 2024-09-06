@@ -32,6 +32,10 @@ try {
     $redis_hash = "mkconfig";
   };
 
+  if(!isset($autobackup_period)) {
+    $autobackup_period = 3600;
+  };
+
 
 
   $redis = new Redis();
@@ -77,7 +81,37 @@ try {
     if(!isset($q["name"]) || !isset($q["config"])) {
       throw new Exception("some parameters is missing");
     };
-    $res = $redis->hSet($redis_hash, "config.".$q["name"], $q["config"]);
+
+    $config_name = $q["name"];
+
+    $backup_time = $redis->hGet($redis_hash, "backup_time.".$config_name);
+    if($backup_time === FALSE || !is_numeric($backup_time)) {
+      $backup_time = 0;
+    } else {
+      $backup_time = $backup_time + 0;
+    };
+
+    $now = time();
+
+    if(($now - $backup_time) >= $autobackup_period) {
+      $prev_config = $redis->hGet($redis_hash, "config.".$config_name);
+      if($prev_config !== FALSE) {
+        $res = $redis->hSet($redis_hash, "backup.$now.".$config_name, $prev_config);
+        if($res === FALSE) {
+          throw new Exception("redis: error setting value");
+        };
+        $res = $redis->hSet($redis_hash, "backup_time.".$config_name, $now);
+        if($res === FALSE) {
+          throw new Exception("redis: error setting value");
+        };
+      };
+    };
+
+    $res = $redis->hSet($redis_hash, "config.".$config_name, $q["config"]);
+    if($res === FALSE) {
+      throw new Exception("redis: error setting value");
+    };
+    $res = $redis->hSet($redis_hash, "config_time.".$config_name, $now);
     if($res === FALSE) {
       throw new Exception("redis: error setting value");
     };

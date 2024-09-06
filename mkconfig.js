@@ -3881,6 +3881,7 @@ $( document ).ready(function() {
               .css("margin-right", "5px")
               .text("Сохранить как")
               .click(function() {
+                var elm = $(this);
                 var conf_str=JSON.stringify( config, undefined, 2 );
                 var conf_name=$("#saveloadname").val();
                 if(conf_name == undefined) {
@@ -3910,6 +3911,7 @@ $( document ).ready(function() {
                   g_config_name = conf_name;
                   $("#autosave_name").text(conf_name);
                   $("#autosave_ind").css("color", "gray");
+                  elm.animateHighlight("lightgreen", 200);
                 });
 
               })
