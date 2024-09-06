@@ -37,6 +37,39 @@ try {
   };
 
 
+  $has_read_access = true;
+  $has_write_access = true;
+
+  if(isset($groups_header)) {
+    $has_read_access = false;
+    $has_write_access = false;
+
+    if(!isset($read_group_reg)) {
+      throw new Exception("no read_group_reg set in local_settings.php");
+    };
+
+    if(@preg_match($read_group_reg, "T E S T") === FALSE) {
+      throw new Exception("Bad regexp in read_group_reg");
+    };
+
+    if(!isset($write_group_reg)) {
+      throw new Exception("no write_group_reg set in local_settings.php");
+    };
+
+    if(@preg_match($write_group_reg, "T E S T") === FALSE) {
+      throw new Exception("Bad regexp in write_group_reg");
+    };
+
+    if(!isset( $_SERVER[$groups_header] )) {
+      throw new Exception("No auth header present");
+    };
+    if(preg_match($write_group_reg, $_SERVER[$groups_header])) {
+      $has_write_access = true;
+      $has_read_access = true;
+    } else if(preg_match($read_group_reg, $_SERVER[$groups_header])) {
+      $has_read_access = true;
+    };
+  };
 
   $redis = new Redis();
 
@@ -52,6 +85,9 @@ try {
   $ret = Array();
 
   if($q["action"] == "load_config") {
+    if(! $has_read_access) {
+      throw new Exception("You have no access to read data");
+    };
     $config_name = "default";
     if(isset($q["name"])) {
       $config_name = $q["name"];
@@ -76,8 +112,12 @@ try {
       };
     };
 
+    $ret["can_write"] = $has_write_access;
  
   } else if($q["action"] == "save_config") {
+    if(! $has_write_access) {
+      throw new Exception("You have no access to write data");
+    };
     if(!isset($q["name"]) || !isset($q["config"])) {
       throw new Exception("some parameters is missing");
     };

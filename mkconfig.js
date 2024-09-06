@@ -7,6 +7,8 @@ var g_config_name;
 
 let var_errors=0;
 
+var g_readonly = true;
+
 let prefix2mask=[
 "0.0.0.0",
 "128.0.0.0",
@@ -574,7 +576,7 @@ function config_changed(autosave) {
     $("#autosave_ind").css("color", "yellow");
   };
 
-  if( autosave == 1 && $("#autosave").is(":checked") ) {
+  if( autosave == 1 && $("#autosave").is(":checked") && !g_readonly ) {
     run_query({"action": "save_config", "name": g_config_name, "config": conf_str}, function(res) {
       $("#autosave_ind").css("color", "green");
       after_save();
@@ -3358,7 +3360,14 @@ function config_loaded() {
    .css("margin-bottom", "1em")
    .append( $(DIV)
      .append( $(LABEL).text("Автосохранение: ") )
-     .append( $(INPUT, {"type": "checkbox", "id": "autosave", "checked": true}) )
+     .append( $(INPUT, {"type": "checkbox", "id": "autosave", "checked": !g_readonly})
+       .click(function() { return !g_readonly; })
+       .on("change", function() {
+         if($(this).is(":checked")) {
+           config_changed(1);
+         };
+       })
+     )
      .append( $(LABEL, {"id": "autosave_ind"})
        .addClass("ui-icon")
        .addClass("ui-icon-save")
@@ -3770,6 +3779,9 @@ $( document ).ready(function() {
   run_query({"action": "load_config", "name": "default"}, function(data) {
 
     g_config_name = "default";
+    if(data["ok"]["can_write"] === true) {
+      g_readonly = false;
+    };
 
     try {
       config=JSON.parse( data["ok"]["config"] );
@@ -3871,7 +3883,7 @@ $( document ).ready(function() {
         .append(
           $(DIV)
            .css("margin-top", "5px")
-           .append(
+           .append(g_readonly ? $(LABEL) :
              $(LABEL)
               .addClass("ns")
               .css("border", "1px black solid")
