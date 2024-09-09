@@ -12,4 +12,10 @@
   $groups_header = "HTTP_X_IDP_GROUPS"; // $_SERVER key
   $read_group_reg = '/\/usr_netapp_confconstr_read(\W|$)/i';
   $write_group_reg = '/\/usr_netapp_confconstr_write(\W|$)/i';
+
+  # per user acces, when basic auth used
+  #$groups_header = "REMOTE_USER"; // $_SERVER key
+  #$read_group_reg = '/.*/i';
+  #$write_group_reg = '/(?:lion)/i';
+
 ?>
