@@ -1,8 +1,0 @@
-User-agent: *
-Sitemap: /sitemap.xml
-Disallow: */search/ajax/
-Disallow: */chunks/ajax/
-Disallow: /assets/templates/
-Disallow: /leuploads/icons/
-Disallow: /leuploads/custom_maps/
-Disallow: */follow_body/
