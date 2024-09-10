@@ -2345,7 +2345,9 @@ function template_selected() {
          .append(
            $(DIV)
             .css("display", "table-cell")
-            .append( $(LABEL).text( config["variables"][ varname ]["name"] ) )
+            .append(
+              $(LABEL).text( /^_/.test(varname) ? "" : config["variables"][ varname ]["name"] )
+            )
          )
          .append(
            $(DIV)
@@ -2356,7 +2358,14 @@ function template_selected() {
          .append(
            $(DIV)
             .css("display", "table-cell")
-            .append(
+            .append( /^_/.test(varname) ?
+              $(INPUT)
+               .prop("id", "var_value_"+varname)
+               .prop("data-varname", varname)
+               .prop("data-check", check)
+               .prop("type", "hidden")
+               .val( val )
+              :
               $(INPUT)
                .css("width", "400px")
                .prop("id", "var_value_"+varname)
