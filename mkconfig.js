@@ -5,7 +5,7 @@ var newconf;
 
 var g_config_name;
 
-let var_errors=0;
+let var_errors = [];
 
 var g_readonly = true;
 
@@ -705,6 +705,7 @@ function after_save() {
 
 
   $(DIV, { id: "result" })
+   .css("display", "table")
    .css("white-space", "pre")
    .css("border", "1px black solid")
    .css("padding", "1em")
@@ -891,20 +892,20 @@ function add_subsection(plus_minus, label, parent_div) {
 function var_value(varname) {
   let var_elm=$("INPUT#var_value_"+varname);
   if(var_elm.length !== 1) {
-    var_errors++;
+    var_errors.push("Cant find variable \"" + varname + "\"");
     return null;
   };
 
   let val=var_elm.val();
   let check=var_elm.prop("data-check");
   if(check == undefined) {
-    var_errors++;
+    var_errors.push("Cant find variable \"" + varname + "\" data-check property");
     return undefined;
   };
   let check_re=new RegExp(check);
   if(!check_re.test(val)) {
     var_elm.css("background-color", "#FF8888");
-    var_errors++;
+    var_errors.push("Значение переменной \"" + varname + "\" не соответствует шаблону");
     return undefined;
   } else {
     var_elm.css("background-color", "white");
@@ -1027,25 +1028,25 @@ function var_input () {
     var role=sel.val();
     if(role == undefined) {
       $("#message").text( "undefined value for interface role" );
-      $("#result").text("").hide();
+      $("#result").empty().hide();
       return;
     };
     var int_name=sel.prop("data-int");
     if(int_name == undefined) {
       $("#message").text( "undefined interface name" );
-      $("#result").text("").hide();
+      $("#result").empty().hide();
       return;
     };
     if(role == "") {
-      $("#message").text( "Не быбрана роль для интерфейса \""+int_name+"\"");
-      $("#result").text("").hide();
+      $("#message").text( "Не выбрана роль для интерфейса \""+int_name+"\"");
+      $("#result").empty().hide();
       return;
     };
     int_list.push(int_name);
     int_role[int_name]=role;
     if(config["roles"][role] == undefined) {
       $("#message").text( "Undefined role \"" + role + "\" for interface \""+int_name+"\"");
-      $("#result").text("").hide();
+      $("#result").empty().hide();
       return;
     };
   };
@@ -1075,7 +1076,7 @@ function var_input () {
     if(gf != "INTERFACES") {
       if(config["features"][gf] == undefined) {
         $("#message").text( "Глобальная функция \""+gf+"\" не определена, проверьте конфигурацию приложения");
-        $("#result").text("").hide();
+        $("#result").empty().hide();
         return;
       };
       for(var fi=0; fi < config["features"][gf].length; fi++) {
@@ -1213,7 +1214,7 @@ function var_input () {
   res=res_parts.join("");
 
   res_parts=res.split(/(%(?:{(?:\([^\)}]+\))?[A-Za-z_\-0-9]+}|[A-Za-z_\-0-9]+|\([0-9*+\/\-\(\)]+\))%)/);
-  var_errors=0;
+  var_errors = [];
   for(var ri=0; ri < res_parts.length; ri++) {
     let vs=var_sub(res_parts[ri]);
     if(vs !== undefined) {
@@ -1221,12 +1222,82 @@ function var_input () {
     };
   };
 
-  if(var_errors != 0) return;
+  if(var_errors.length != 0) {
+    $("#message").text( var_errors.join("\n") ).css("white-space", "pre");
+    $("#result").empty().hide();
+    return;
+  };
 
   res=res_parts.join("");
 
+  res_parts = res.split(/( *<copysection> *\n| *<\/copysection> *\n?)/);
 
-  $("#result").text(res).show();
+  $("#result").empty();
+
+  for(var ri=0; ri < res_parts.length; ri++) {
+    if(/^<copysection>/.test(res_parts[ri])) {
+      // this is start of copy section, show next part as copy-able block
+      // if there is what to show
+      if(ri < (res_parts.length - 1) && // there is next part
+         !/^ *<copysection>/.test(res_parts[ri + 1]) && //next part is not another copy section
+         !/^ *<\/copysection>/.test(res_parts[ri + 1]) && //next part is not end of copy section
+         res_parts[ri + 1] !== "" &&
+      true) {
+        $("#result")
+         .append( $(DIV)
+           .css("display", "table-row")
+           .addClass("row")
+           .append( $(DIV).css("display", "table-cell")
+             .css("padding-right", "0.5em")
+             .append( $(LABEL).addClass("ui-icon ui-icon-copy button")
+               .title("Копировать в буфер")
+               .click(function() {
+                 let just_copied = $(this).closest(".row").find(".text");
+                 let text = just_copied.text();
+                 copy_to_clipboard(text, function() {
+                   $("#result").find(".text").each(function() {
+                     if($(this).hasClass("just_copied")) {
+                       $(this).removeClass("just_copied");
+                       $(this).addClass("copied_before");
+                       return false;
+                     };
+                   });
+                   just_copied.removeClass("not_copied_yet");
+                   just_copied.removeClass("copied_before");
+                   just_copied.addClass("just_copied");
+                 });
+               })
+             )
+           )
+           .append( $(DIV).css("display", "table-cell")
+             .addClass("not_copied_yet")
+             .addClass("text")
+             .text(res_parts[ri + 1])
+             .css({"border": "1px solid #404040"})
+           )
+         )
+        ;
+        ri++; // move to next block
+      }
+    } else if(!/^ *<\/copysection>/.test(res_parts[ri])) {
+      // this is comment section, probably
+      $("#result")
+       .append( $(DIV)
+         .css("display", "table-row")
+         .append( $(DIV).css("display", "table-cell")
+           .css("padding-right", "0.5em")
+         )
+         .append( $(DIV).css("display", "table-cell")
+           .text(res_parts[ri])
+         )
+       )
+      ;
+    };
+
+  };
+
+  $("#result").show();
+  //$("#result").text(res).show();
 };
 
 function add_global_feature_entry(gf, i, cont) {
@@ -2240,7 +2311,7 @@ function template_selected(prev_template) {
 
   $("#dev_options").empty();
 
-  $("#result").text("").hide();
+  $("#result").empty().hide();
 
   if(template == undefined || template == "") {
     $("#message").text("No template selected");
