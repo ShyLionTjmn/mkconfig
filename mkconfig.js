@@ -905,7 +905,8 @@ function var_value(varname) {
   let check_re=new RegExp(check);
   if(!check_re.test(val)) {
     var_elm.css("background-color", "#FF8888");
-    var_errors.push("Значение переменной \"" + varname + "\" не соответствует шаблону");
+    //var_errors.push("Значение переменной \"" + varname + "\" не соответствует шаблону");
+    var_errors.push("");
     return undefined;
   } else {
     var_elm.css("background-color", "white");
