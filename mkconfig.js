@@ -323,7 +323,7 @@ function template_add_var(varname, template, table) {
 
                var opts=addvarsel.find("option").filter(function() { return $(this).val() == varname; });
                if(opts.length == 0) {
-                 addvarsel.append( $("<OPTION/>", { value: varname}).text(varname) );
+                 addvarsel.append( $(OPTION, { value: varname}).text(varname) );
                };
                addvarsel.val(varname);
                addvarval.val(varvalue);
@@ -473,7 +473,7 @@ function teaddnewvar() {
     if(varsearch.length == 0) {
 
       $( tevarsdivs[i] ).find(".templatenewvarsel")
-       .append( $("<OPTION/>", {value: newvarname}).text(newvarname) );
+       .append( $(OPTION, {value: newvarname}).text(newvarname) );
     };
   };
 
@@ -610,11 +610,13 @@ function after_save() {
     return;
   };
 
-  var type_list=$("<SELECT/>", { id: "devtype" })
-   .append( $("<OPTION/>", { selected: true, value: "" }).text(" Выбрать ") )
+  var type_list=$(SELECT, { id: "devtype" })
+   .append( $(OPTION, { selected: true, value: "" }).text(" Выбрать ") )
    .change(function() {
      var type=$(this).val();
      if(type != "") {
+       let current_template  = $("#template").val();
+       let curr_tp_in_list = false;
        $("#template").find('option').remove();
        var plist=keys(config["templates"]);
        plist.sort(function(a,b) {
@@ -624,15 +626,30 @@ function after_save() {
          if(config["templates"][b]["order"] != undefined) order_b=Number( config["templates"][b]["order"] );
          return order_a - order_b;
        });
+       let default_tp = undefined;
        for(var i=0; i < plist.length; i++) {
          if( config["templates"][ plist[i] ]["devfilter"] == undefined) {
            config["templates"][ plist[i] ]["devfilter"] = ".*";
          };
          var re=new RegExp( config["templates"][ plist[i] ]["devfilter"] );
          if(re.test(type)) {
-           $("<OPTION/>", { selected: (plist.length == 1 || config["templates"][ plist[i] ]["default"] == 1), value: plist[i] }).text( config["templates"][ plist[i] ]["description"]).appendTo( $("#template") );
+           if(current_template === plist[i]) {
+             curr_tp_in_list = true;
+           };
+           if(config["templates"][ plist[i] ]["default"] == 1) {
+             default_tp = plist[i];
+           };
+           $(OPTION, { value: plist[i] }).text( config["templates"][ plist[i] ]["description"]).appendTo( $("#template") );
          };
        };
+       if(curr_tp_in_list) {
+         $("#template").val(current_template);
+       } else if(plist.length == 1) {
+         $("#template").val(plist[0]);
+       } else if(default_tp !== undefined) {
+         $("#template").val(default_tp);
+       };
+
        template_selected();
      } else {
        template_selected();
@@ -641,10 +658,10 @@ function after_save() {
 
   for(var ti in config["devtypes"]) {
     var t=config["devtypes"][ti];
-    type_list.append( $("<OPTION/>", { value: t }).text(t) );
+    type_list.append( $(OPTION, { value: t }).text(t) );
   };
 
-  var template_list=$("<SELECT/>", { id: "template" })
+  var template_list=$(SELECT, { id: "template" })
    .change(template_selected);
 
   $(DIV)
@@ -788,7 +805,7 @@ function add_sortable_key(value, sortable, removetrigger, removeaddcheck, option
         .css("padding-left", "1em")
         .css("padding-right", "1em")
 .append(
-  $("<FORM/>")
+  $(FORM)
    .css("display", "inline")
         .append(
           $(INPUT, { type: "radio", name: "optional", value: "off", checked: (opt_value == "off") })
@@ -820,11 +837,11 @@ function add_sortable_key(value, sortable, removetrigger, removeaddcheck, option
           $(this).parent().parent().parent().find(".newvalue").val(key);
           if(removeaddcheck) {
             if(removeaddcheck(key)) {
-              $(this).parent().parent().parent().find(".newvaluesel").append( $("<OPTION/>", { value: key}).text(key) );
+              $(this).parent().parent().parent().find(".newvaluesel").append( $(OPTION, { value: key}).text(key) );
               $(this).parent().parent().parent().find(".newvaluesel").val(key);
             };
           } else {
-            $(this).parent().parent().parent().find(".newvaluesel").append( $("<OPTION/>", { value: key}).text(key) );
+            $(this).parent().parent().parent().find(".newvaluesel").append( $(OPTION, { value: key}).text(key) );
             $(this).parent().parent().parent().find(".newvaluesel").val(key);
           };
           var sortable=$(this).parents(".sortable");
@@ -1308,7 +1325,7 @@ function add_global_feature_entry(gf, i, cont) {
     ;
     var lines=add_subsection("+", "Строки", entry);
 
-    var ta=$("<TEXTAREA/>")
+    var ta=$(TEXTAREA)
      .attr("wrap", "off")
      .addClass("globalfeaturelines")
      .css("width", "900px")
@@ -1427,7 +1444,7 @@ function add_global_feature(gf, gf_list) {
     add_global_feature_entry(gf, i, feature_entries_cont);
   };
 
-  var ta=$("<TEXTAREA/>")
+  var ta=$(TEXTAREA)
      .attr("wrap", "off")
      .addClass("newfeaturelines")
      .css("width", "900px")
@@ -1447,7 +1464,7 @@ function add_global_feature(gf, gf_list) {
    .append(
      $(LABEL).addClass("ns").text("Добавить: ")
    )
-   .append( $("<BR/>") )
+   .append( $(BR) )
    .append(
      $(LABEL).addClass("ns").text("Фильтр: ")
    )
@@ -1553,7 +1570,7 @@ function features_changed() {
     for(var fi=0; fi < features.length; fi++) {
       var feat=features[fi];
       if(listed_features.indexOf( feat ) < 0 && added_features.indexOf( feat ) < 0) {
-        $("<OPTION/>", { value: feat })
+        $(OPTION, { value: feat })
          .text(feat)
          .appendTo(template_feat_add_sel)
         ;
@@ -1628,7 +1645,7 @@ function features_changed() {
     for(var fi=0; fi < features.length; fi++) {
       var feat=features[fi];
       if(listed_features.indexOf( feat ) < 0 && added_features.indexOf( feat ) < 0) {
-        $("<OPTION/>", { value: feat })
+        $(OPTION, { value: feat })
          .text(feat)
          .appendTo(depends_sel)
         ;
@@ -1637,7 +1654,7 @@ function features_changed() {
         var opts=$(role_glob_conf_feat_sel[s]).find("option").filter(function() { return $(this).val() == feat; });
         if(opts.length == 0) {
           $(role_glob_conf_feat_sel[s]).append(
-            $("<OPTION/>", { value: feat })
+            $(OPTION, { value: feat })
              .text(feat)
           );
         };
@@ -1646,7 +1663,7 @@ function features_changed() {
         var opts=$(role_int_conf_feat_sel[s]).find("option").filter(function() { return $(this).val() == feat; });
         if(opts.length == 0) {
           $(role_int_conf_feat_sel[s]).append(
-            $("<OPTION/>", { value: feat })
+            $(OPTION, { value: feat })
              .text(feat)
           );
         };
@@ -1764,7 +1781,7 @@ function add_template(template, te_list) {
       })
       .css("width", "3em")
    )
-   .append( $("<BR/>") )
+   .append( $(BR) )
    .append(
      $(LABEL).addClass("ns").text("Фильтр по типу устройства: ")
    )
@@ -1834,9 +1851,9 @@ function add_template(template, te_list) {
     template_add_var(varname, template, template_vars);
   };
 
-  var varssel=$("<SELECT/>")
+  var varssel=$(SELECT)
    .addClass("templatenewvarsel")
-   .append( $("<OPTION/>", { value: "", selected: true }) )
+   .append( $(OPTION, { value: "", selected: true }) )
   ;
 
   var othervars = [];
@@ -1856,7 +1873,7 @@ function add_template(template, te_list) {
 
   for(var vi=0; vi < othervars.length; vi++) {
     var varname = othervars[vi];
-    $("<OPTION/>", { value: varname })
+    $(OPTION, { value: varname })
      .text(varname)
      .appendTo(varssel);
   };
@@ -1943,13 +1960,13 @@ function add_template(template, te_list) {
     };
   };
 
-  var template_feat_sel=$("<SELECT/>")
+  var template_feat_sel=$(SELECT)
    .addClass("newvaluesel")
-   .append( $("<OPTION/>", { value: "", selected: true }).text("") );
+   .append( $(OPTION, { value: "", selected: true }).text("") );
 
   for(var feat in config["features"]) {
     if(template_features.indexOf( feat ) == -1) {
-      $("<OPTION/>", { value: feat })
+      $(OPTION, { value: feat })
        .text(feat)
        .appendTo(template_feat_sel)
       ;
@@ -2040,12 +2057,12 @@ function add_template(template, te_list) {
    .appendTo( int_roles_table )
   ;
 
-  var rolelist=$("<SELECT/>")
+  var rolelist=$(SELECT)
    .addClass("templateintrolessel")
-   .append( $("<OPTION/>", { value: "" }).text("") );
+   .append( $(OPTION, { value: "" }).text("") );
 
   for(var role in config["roles"]) {
-    $("<OPTION/>", { value: role})
+    $(OPTION, { value: role})
      .text(role)
      .appendTo( rolelist );
   };
@@ -2246,7 +2263,7 @@ function template_selected() {
             .text(feat)
          )
          .append(
-           $("<FORM/>")
+           $(FORM)
             .css("display", "table-cell")
             .append(
               $(INPUT, { type: "radio", name: "optional", value: "on-on", checked: (optional_feats[feat] == "on-on")})
@@ -2458,12 +2475,12 @@ function template_selected() {
       $(DIV).text("Роли:").appendTo(int_div);
 
       for(var inti=0; inti < int_list.length; inti++) {
-        var role_sel=$("<SELECT/>")
+        var role_sel=$(SELECT)
          .addClass("int_role")
          .prop("data-int", int_list[inti])
          .on("change", var_input);
 
-        $("<OPTION/>", {value: ""}).text("Выбрать...").appendTo(role_sel);
+        $(OPTION, {value: ""}).text("Выбрать...").appendTo(role_sel);
 
         for(var r=0; r < roles_list.length; r++) {
           let disabled=false;
@@ -2484,7 +2501,7 @@ function template_selected() {
             };
           };
 
-          $("<OPTION/>", { selected: (roles_list[r] == int_roles[ int_list[inti] ]) && !disabled, value: roles_list[r], disabled: disabled }).text( roles_list[r] )
+          $(OPTION, { selected: (roles_list[r] == int_roles[ int_list[inti] ]) && !disabled, value: roles_list[r], disabled: disabled }).text( roles_list[r] )
            .appendTo(role_sel);
         };
 
@@ -2526,7 +2543,7 @@ function del_depend() {
   if(config["features"][deldep] != undefined) {
     var check=sel.find("option").filter(function() { return $(this).val() == deldep; });
     if(check.length == 0) {
-      sel.append( $("<OPTION/>", { value: deldep }).text(deldep) );
+      sel.append( $(OPTION, { value: deldep }).text(deldep) );
       sel.val(deldep);
     };
   };
@@ -2534,11 +2551,11 @@ function del_depend() {
 };
 
 function add_role_int_config(role, i, int_sortable) {
-  var feat_sel=$("<SELECT/>")
+  var feat_sel=$(SELECT)
    .addClass("roleintconfigfeature")
    .css("margin-left", "1em")
    .append(
-     $("<OPTION/>", { value: "", selected: (config["roles"][role]["int_config"][i]["feature"] == undefined) })
+     $(OPTION, { value: "", selected: (config["roles"][role]["int_config"][i]["feature"] == undefined) })
       .text("")
    )
    .on("change", function() {
@@ -2567,7 +2584,7 @@ function add_role_int_config(role, i, int_sortable) {
    })
   ;
   for(var feature in config["features"]) {
-    $("<OPTION/>", { value: feature, selected: (config["roles"][role]["int_config"][i]["feature"] == feature) })
+    $(OPTION, { value: feature, selected: (config["roles"][role]["int_config"][i]["feature"] == feature) })
      .text(feature)
      .appendTo(feat_sel)
     ;
@@ -2683,7 +2700,7 @@ function add_role_int_config(role, i, int_sortable) {
 
   var lines=add_subsection("+", "Строки", row);
 
-  var ta= $("<TEXTAREA/>")
+  var ta= $(TEXTAREA)
    .attr("wrap", "off")
    .addClass("roleintconfiglines")
    .css("width", "900px")
@@ -2714,11 +2731,11 @@ function add_role_int_config(role, i, int_sortable) {
 };
 
 function add_role_glob_config(role, i, glob_sortable) {
-  var feat_sel=$("<SELECT/>")
+  var feat_sel=$(SELECT)
    .addClass("roleglobconfigfeature")
    .css("margin-left", "1em")
    .append(
-     $("<OPTION/>", { value: "", selected: (config["roles"][role]["global_post_config"][i]["feature"] == undefined) })
+     $(OPTION, { value: "", selected: (config["roles"][role]["global_post_config"][i]["feature"] == undefined) })
       .text("")
    )
    .on("change", function() {
@@ -2746,7 +2763,7 @@ function add_role_glob_config(role, i, glob_sortable) {
    })
   ;
   for(var feature in config["features"]) {
-    $("<OPTION/>", { value: feature, selected: (config["roles"][role]["global_post_config"][i]["feature"] == feature) })
+    $(OPTION, { value: feature, selected: (config["roles"][role]["global_post_config"][i]["feature"] == feature) })
      .text(feature)
      .appendTo(feat_sel)
     ;
@@ -2858,7 +2875,7 @@ function add_role_glob_config(role, i, glob_sortable) {
 
       })
    )
-   .append( $("<BR/>") )
+   .append( $(BR) )
    .append( $(LABEL).addClass("ns").text("Секция: ") )
    .append(
      $(INPUT)
@@ -2890,7 +2907,7 @@ function add_role_glob_config(role, i, glob_sortable) {
 
   var lines=add_subsection("+", "Строки", row);
 
-  var ta= $("<TEXTAREA/>")
+  var ta= $(TEXTAREA)
    .attr("wrap", "off")
    .addClass("roleglobconfiglines")
    .css("width", "900px")
@@ -3012,9 +3029,9 @@ function add_role(role, cont) {
    .appendTo( depend_sect )
   ;
 
-  var depend_sel=$("<SELECT/>")
+  var depend_sel=$(SELECT)
    .addClass("roleadddepsel")
-   .append( $("<OPTION/>", { value: "", selected: true }).text("") )
+   .append( $(OPTION, { value: "", selected: true }).text("") )
   ;
 
   var gfa=keys(config["features"]);
@@ -3023,7 +3040,7 @@ function add_role(role, cont) {
   for(var i=0; i < gfa.length; i++) {
     var gf=gfa[i];
     if( config["roles"][role]["require"].indexOf( gf ) == -1) {
-      depend_sel.append( $("<OPTION/>", { value: gf }).text(gf) );
+      depend_sel.append( $(OPTION, { value: gf }).text(gf) );
     } else {
       $(DIV)
        .css("display", "table-row")
@@ -3125,7 +3142,7 @@ function add_role(role, cont) {
     add_role_int_config(role, i, int_sortable);
   };
 
-  var ta=$("<TEXTAREA/>")
+  var ta=$(TEXTAREA)
    .attr("wrap", "off")
    .addClass("newroleintconfiglines")
    .css("width", "900px")
@@ -3142,7 +3159,7 @@ function add_role(role, cont) {
 
   $(DIV)
    .append( $(LABEL).addClass("ns").text("Добавить:") )
-   .append( $("<BR/>") )
+   .append( $(BR) )
    .append( $(LABEL).addClass("ns").text("Фильтр: ") )
    .append(
      $(INPUT)
@@ -3227,7 +3244,7 @@ function add_role(role, cont) {
     add_role_glob_config(role, i, glob_sortable);
   };
 
-  var ta=$("<TEXTAREA/>")
+  var ta=$(TEXTAREA)
    .attr("wrap", "off")
    .addClass("newroleglobconfiglines")
    .css("width", "900px")
@@ -3244,7 +3261,7 @@ function add_role(role, cont) {
 
   $(DIV)
    .append( $(LABEL).addClass("ns").text("Добавить:") )
-   .append( $("<BR/>") )
+   .append( $(BR) )
    .append( $(LABEL).addClass("ns").text("Фильтр: ") )
    .append(
      $(INPUT)
@@ -3306,7 +3323,7 @@ function add_role(role, cont) {
         $(this).parents(".roleglobsect").find(".newroleglobconfiglines").trigger("focus");
       })
    )
-   .append( $("<BR/>") )
+   .append( $(BR) )
    .append( $(LABEL).addClass("ns").text("Секция: ") )
    .append(
      $(INPUT)
@@ -3352,7 +3369,7 @@ function roles_changed() {
     for(var role in config["roles"]) {
       var opts=int_new_row_sel.find("option").filter(function() { return $(this).val() == role; });
       if(opts.length == 0) {
-        $("<OPTION/>", {value: role})
+        $(OPTION, {value: role})
         .text(role)
         .appendTo( int_new_row_sel )
         ;
@@ -3785,9 +3802,10 @@ function config_loaded() {
 $( document ).ready(function() {
   body=$("body");
 
-  run_query({"action": "load_config", "name": "default"}, function(data) {
+  g_config_name = getUrlParameter("config", "default");
 
-    g_config_name = "default";
+  run_query({"action": "load_config", "name": g_config_name}, function(data) {
+
     if(data["ok"]["can_write"] === true) {
       g_readonly = false;
     };
@@ -3845,9 +3863,9 @@ $( document ).ready(function() {
      .append( $(DIV, { id: "temessage"}).css("height", "1em").css("color", "red") )
      .hide();
 
-    var server_list=$("<SELECT/>", { id: "serverconfigsel"})
+    var server_list=$(SELECT, { id: "serverconfigsel"})
      .css("margin-left", "1em")
-     .append( $("<OPTION/>", { value: ""}).text("") )
+     .append( $(OPTION, { value: ""}).text("") )
      .on("change", function() {
        $("#saveloadname").val( $(this).val() );
      })
@@ -3855,7 +3873,7 @@ $( document ).ready(function() {
     ;
 
     for(var idx in data["ok"]["configs_list"]) {
-      $("<OPTION/>", { value: data["ok"]["configs_list"][idx] })
+      $(OPTION, { value: data["ok"]["configs_list"][idx] })
        .text(data["ok"]["configs_list"][idx])
        .appendTo( server_list )
       ;
@@ -3925,7 +3943,7 @@ $( document ).ready(function() {
                     };
                   });
                   if(!found) {
-                    server_list.append( $("<OPTION/>", { value: conf_name }).text(conf_name) );
+                    server_list.append( $(OPTION, { value: conf_name }).text(conf_name) );
                   };
 
                   server_list.val(conf_name);
@@ -3984,7 +4002,7 @@ $( document ).ready(function() {
            )
         )
      )
-     .append( $("<BR/>") )
+     .append( $(BR) )
      .append(
        $(DIV)
         .css("border", "1px gray solid")
@@ -4059,7 +4077,7 @@ $( document ).ready(function() {
            )
         )
      )
-     .append( $("<BR/>") )
+     .append( $(BR) )
      .append(
        $(DIV)
         .css("border", "1px gray solid")
@@ -4094,7 +4112,7 @@ $( document ).ready(function() {
            )
         )
      )
-     .append( $("<BR/>") )
+     .append( $(BR) )
      .append(
        $(DIV)
         .css("border", "1px gray solid")
@@ -4187,7 +4205,7 @@ $( document ).ready(function() {
      .appendTo( body )
      ;
 
-    $("<PRE/>", { id: "configtext"})
+    $(PRE, { id: "configtext"})
      .css("position", "absolute")
      .css("right", "0px")
      .css("top", "0px")
