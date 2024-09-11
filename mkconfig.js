@@ -2223,9 +2223,14 @@ function template_selected(prev_template) {
   var var_div=$("#dev_variables");
   var template=$("#template").val();
 
+  var vars_save = {};
+
   if(template === prev_template) {
-    var_input();
-    return;
+    var_div.find(".var_row").each(function() {
+      let var_row = $(this);
+      let var_name = var_row.data("varname");
+      vars_save[var_name] = var_row.find("INPUT").val();
+    });
   };
 
   var_div.empty();
@@ -2360,9 +2365,13 @@ function template_selected(prev_template) {
       var varname=var_list[vi];
       if(config["templates"][template]["variables"][ varname ] != undefined) {
         var val=config["templates"][template]["variables"][ varname ];
+        if(template === prev_template) {
+          val = vars_save[ varname ];
+        };
         var check=config["variables"][ varname ]["check"];
 
         $(DIV, { id: "var_row_"+varname })
+         .data("varname", varname)
          .css("display", "table-row")
          .addClass("var_row")
          .append(
