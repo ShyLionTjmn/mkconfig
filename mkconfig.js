@@ -650,7 +650,7 @@ function after_save() {
          $("#template").val(default_tp);
        };
 
-       template_selected();
+       template_selected(current_template);
      } else {
        template_selected();
      };;
@@ -662,7 +662,7 @@ function after_save() {
   };
 
   var template_list=$(SELECT, { id: "template" })
-   .change(template_selected);
+   .change(function() { template_selected(); });
 
   $(DIV)
    .append(
@@ -2219,8 +2219,15 @@ function add_template(template, te_list) {
 
 var optional_feats={};
 
-function template_selected() {
+function template_selected(prev_template) {
   var var_div=$("#dev_variables");
+  var template=$("#template").val();
+
+  if(template === prev_template) {
+    var_input();
+    return;
+  };
+
   var_div.empty();
 
   var int_div=$("#interfaces");
@@ -2230,7 +2237,6 @@ function template_selected() {
 
   $("#result").text("").hide();
 
-  var template=$("#template").val();
   if(template == undefined || template == "") {
     $("#message").text("No template selected");
     return;
