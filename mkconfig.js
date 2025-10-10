@@ -860,31 +860,35 @@ function add_subsection(plus_minus, label, parent_div) {
    .css("margin-bottom", "1em")
    .toggle( plus_minus == "-");
 
-  $(DIV)
+  $(DIV).addClass("subsection_container")
    .append(
-     $(LABEL)
-      .addClass("ns")
-      .text(plus_minus)
-      .css("width", "1em")
-      .css("display", "inline-block")
-      .css("text-align", "center")
-      .css("border", "1px black solid")
-      .css("border-radius", "5px")
-      .prop("data-subid", subid)
-      .click(function() {
-        var sid=$(this).prop("data-subid");
-        var subsection=document.getElementById("subsection_"+sid);
-        $(subsection).toggle();
-        if( $(subsection).is(":visible") ) {
-          $(this).text("-");
-        } else {
-          $(this).text("+");
-        };
-      })
+    $(DIV).addClass("subsection_header")
+     .append(
+      $(LABEL)
+       .addClass("ns")
+       .text(plus_minus)
+       .css("width", "1em")
+       .css("display", "inline-block")
+       .css("text-align", "center")
+       .css("border", "1px black solid")
+       .css("border-radius", "5px")
+       .prop("data-subid", subid)
+       .click(function() {
+         var sid=$(this).prop("data-subid");
+         var subsection=document.getElementById("subsection_"+sid);
+         $(subsection).toggle();
+         if( $(subsection).is(":visible") ) {
+           $(this).text("-");
+         } else {
+           $(this).text("+");
+         };
+       })
+     )
+     .append( $(LABEL).addClass("ns").text(label) )
    )
-   .append( $(LABEL).addClass("ns").text(label) )
    .append( subsection )
-   .appendTo( parent_div );
+   .appendTo( parent_div )
+  ;
   subid++;
   return subsection;
 };
@@ -3043,55 +3047,60 @@ function add_role(role, cont) {
    .addClass("rolerow")
    .css("margin-bottom", "1em")
    .prop("data-role", role)
-   .append( $(LABEL).text("Роль: ") )
-   .append(
-     $(INPUT, { readonly: true })
-      .addClass("rolename")
-      .val(role)
-      .css("background-color", "#EEEEEE")
-   )
-   .append( del_label()
-     .click(function() {
-       var r=$(this).parents(".rolerow").prop("data-role");
-       if(r != undefined && confirm("Подтвердите удаление роли \""+r+"\"")) {
-         $(this).parents(".roleslistsub").find(".newroleinput").val(r);
-         $(this).parents(".rolerow").remove();
-         delete config["roles"][r];
+   .append( $(DIV).addClass("sticky_1")
+     .css({"background-color": "white"})
+     .append( $(LABEL).text("Роль: ") )
+     .append(
+       $(INPUT, { readonly: true })
+        .addClass("rolename")
+        .val(role)
+        .css("background-color", "#EEEEEE")
+     )
+     .append( del_label()
+       .click(function() {
+         var r=$(this).parents(".rolerow").prop("data-role");
+         if(r != undefined && confirm("Подтвердите удаление роли \""+r+"\"")) {
+           $(this).parents(".roleslistsub").find(".newroleinput").val(r);
+           $(this).parents(".rolerow").remove();
+           delete config["roles"][r];
+
+           roles_changed();
+           config_changed(1);
+         };
+       })
+     )
+     .append( copy_label()
+       .click(function() {
+         var newrolename=$(this).parents(".roleslistsub").find(".newroleinput").val();
+         $(this).parents(".roleslistsub").find(".newroleinput").css("background-color", "initial");
+         if(newrolename == undefined) return;
+         newrolename=newrolename.replace(/^\s*/, "").replace(/\s*$/, "");
+         if(newrolename == "") return;
+
+         if( config["roles"][newrolename] != undefined && !newrolename.match(/^[a-zA-Z0-9_\-]]+$/) ) {
+           $(this).parents(".roleslistsub").find(".newroleinput").css("background-color", "#FFBBBB");
+           return;
+         };
+
+         var srcrole=$(this).parents(".rolerow").prop("data-role");
+
+         config["roles"][newrolename]=$.extend(true, {}, config["roles"][srcrole]);
+
+         add_role(newrolename, $(this).parents(".roleslist"));
 
          roles_changed();
+
          config_changed(1);
-       };
-     })
-   )
-   .append( copy_label()
-     .click(function() {
-       var newrolename=$(this).parents(".roleslistsub").find(".newroleinput").val();
-       $(this).parents(".roleslistsub").find(".newroleinput").css("background-color", "initial");
-       if(newrolename == undefined) return;
-       newrolename=newrolename.replace(/^\s*/, "").replace(/\s*$/, "");
-       if(newrolename == "") return;
-
-       if( config["roles"][newrolename] != undefined && !newrolename.match(/^[a-zA-Z0-9_\-]]+$/) ) {
-         $(this).parents(".roleslistsub").find(".newroleinput").css("background-color", "#FFBBBB");
-         return;
-       };
-
-       var srcrole=$(this).parents(".rolerow").prop("data-role");
-
-       config["roles"][newrolename]=$.extend(true, {}, config["roles"][srcrole]);
-
-       add_role(newrolename, $(this).parents(".roleslist"));
-
-       roles_changed();
-
-       config_changed(1);
-     })
+       })
+     )
    )
   ;
 
   var intfilter_sect=add_subsection("+", "Фильтр по имени интерфейса", role_row)
    .addClass("intfiltersect")
   ;
+
+  intfilter_sect.closest(".subsection_container").find(".subsection_header").addClass("sticky_2");
 
   intfilter_sect
    .append( $(LABEL).text("Фильтр: ") )
@@ -3109,6 +3118,8 @@ function add_role(role, cont) {
   var depend_sect=add_subsection("+", "Зависимости", role_row)
    .addClass("dependsect")
   ;
+
+  depend_sect.closest(".subsection_container").find(".subsection_header").addClass("sticky_2");
 
   var depend_cont=$(DIV)
    .addClass("dependtable")
@@ -3199,6 +3210,7 @@ function add_role(role, cont) {
   ;
 
   var int_sect=add_subsection("+", "Настройка интерфейса", role_row);
+  int_sect.closest(".subsection_container").find(".subsection_header").addClass("sticky_2");
 
   int_sect.addClass("roleintsect");
 
@@ -3301,6 +3313,7 @@ function add_role(role, cont) {
 
 
   var glob_sect=add_subsection("+", "Настройка в общей части", role_row);
+  glob_sect.closest(".subsection_container").find(".subsection_header").addClass("sticky_2");
 
   glob_sect.addClass("roleglobsect");
 
@@ -3536,6 +3549,7 @@ function config_loaded() {
   ;
   
   var dev_list=add_subsection("+", "Устройства", te);
+  dev_list.closest(".subsection_container").find(".subsection_header").addClass("sticky_0");
 
   var dev_sortable=$(DIV, {id : "tedevtypes"}).addClass("sortable").appendTo(dev_list);
   dev_sortable.css("display", "table");
@@ -3574,6 +3588,7 @@ function config_loaded() {
   dev_sortable.on("sortstop", tedevlistchange);
 
   var var_list=add_subsection("+", "Переменные", te);
+  var_list.closest(".subsection_container").find(".subsection_header").addClass("sticky_0");
 
   var tevars=$(DIV, { id: "tevars"})
    .css("display", "table")
@@ -3737,6 +3752,7 @@ function config_loaded() {
   ;
 
   var te_list=add_subsection("+", "Шаблоны", te);
+  te_list.closest(".subsection_container").find(".subsection_header").addClass("sticky_0");
 
   te_list.addClass("templatessubsection");
 
@@ -3792,6 +3808,7 @@ function config_loaded() {
   ;
 
   var gf_list=add_subsection("+", "Части общей конфигурации устройства", te);
+  gf_list.closest(".subsection_container").find(".subsection_header").addClass("sticky_0");
   gf_list.addClass("globalfeaturessect");
 
   var gf_cont=$(DIV)
@@ -3836,6 +3853,7 @@ function config_loaded() {
 
 
   var role_list=add_subsection("+", "Роли интерфейсов", te);
+  role_list.closest(".subsection_container").find(".subsection_header").addClass("sticky_0");
   role_list.addClass("roleslistsub");
 
   role_list.append( $(LABEL).text("Используйте переменную %INTNAME% в строках, для подстановки имени интерфейса").css("font-size", "smaller") );
@@ -4300,7 +4318,7 @@ $( document ).ready(function() {
      .css("height", "auto")
      .css("max-height", "800px")
      .css("overflow-x", "scroll")
-     .css("z-index", "1")
+     .css("z-index", "100")
      .css("font-size", "x-small")
      .css("background-color", "white")
      .css("border", "1px black solid")
